@@ -1,4 +1,5 @@
 var employeesAPI = "http://rest.vedinas.ro/employees";
+var employeesList = [];
 
 function deserializeResponse(response) {
     return response.json();
@@ -40,6 +41,7 @@ function listEmployees(employees) {
     for (var i = 0; i < employees.length; i++) {
         var employeeElement = createEmployeeElement(employees[i]);
         agendaElement.appendChild(employeeElement);
+        addEmployeeToCache(employees[i]);
     }
 }
 
@@ -85,6 +87,7 @@ function addEmployeeToDOM(employee) {
     var employeeElement = createEmployeeElement(employee);
     var agendaElement = document.querySelector(".agenda");
 
+    addEmployeeToCache(employee);
     removeSpinnerFromDOM();
     agendaElement.appendChild(employeeElement);
 
@@ -118,13 +121,53 @@ function removeEmployee(event) {
 
     fetch(deleteEmployeeUrl, requestParameters)
         .then(deserializeResponse)
-        .then(() => employeeElement.remove())
+        .then(() => {
+            employeeElement.remove();
+            removeEmployeeFromCache(employeeId - 1);
+        })
         .catch(error => console.log(error))
 }
 
 function searchEmployees() {
     var searchInputText = document.getElementById("searchField").value;
-    // search logic
+    removeEmployeesFromDOM();
+    searchInputText !== '' ? searchEmployeesByName(searchInputText) : getEmployeesFromCache();
+}
+
+function searchEmployeesByName(searchedEmployeeName) {
+    var agendaElement = document.querySelector(".agenda");
+    
+    for (var i = 0; i < employeesList.length; i++) {
+        if (employeesList[i].name.includes(searchedEmployeeName)) {
+            var employeeElement = createEmployeeElement(employeesList[i]);
+            agendaElement.appendChild(employeeElement);
+        }
+    }
+}
+
+function removeEmployeesFromDOM() {
+    var agendaElement = document.querySelector(".agenda");
+    var employees = agendaElement.children;
+    
+    for (var i = employees.length - 1; i >= 0; i--) {
+        employees[i].remove();
+    }
+}
+
+function getEmployeesFromCache() {
+    var agendaElement = document.querySelector(".agenda");
+    for (var i = 0; i < employeesList.length; i++) {
+        var employeeElement = createEmployeeElement(employeesList[i]);
+        agendaElement.appendChild(employeeElement);
+    }
+}
+
+function addEmployeeToCache(employee) {
+    employeesList.push(employee);
+}
+
+function removeEmployeeFromCache(id) {
+    employeesList.splice(employeesList.indexOf(id), 1);
 }
 
 function onDOMLoaded() {
